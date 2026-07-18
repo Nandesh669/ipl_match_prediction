@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Match Outcome Predictor & Analyst</title>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dark-theme">
+    <div class="glow-bg">
+        <div class="glow-circle gc1"></div>
+        <div class="glow-circle gc2"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="main-header">
+        <div class="nav-container">
+            <a href="/" class="brand-logo">
+                <i class="fa-solid fa-trophy brand-icon"></i>
+                <span>IPL<span class="highlight">Predict</span></span>
+            </a>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link {% if active_page == 'predict' %}active{% endif %}">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Predictor
+                </a>
+                <a href="/dashboard" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i> Insights
+                </a>
+                <a href="/model" class="nav-link {% if active_page == 'model' %}active{% endif %}">
+                    <i class="fa-solid fa-robot"></i> Model Report
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="content-container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1 class="hero-title animate-fade-in">Predict IPL Match Outcomes</h1>
+            <p class="hero-subtitle animate-fade-in delay-1">Leverage historical match summaries, venue statistics, head-to-head records, and Scikit-learn classification models to forecast winning probabilities.</p>
+        </section>
+
+        <!-- Predictor Grid Layout -->
+        <div class="predictor-grid">
+            <!-- Form Card -->
+            <div class="glass-card predictor-card animate-fade-in delay-2">
+                <div class="card-header">
+                    <i class="fa-solid fa-sliders header-icon"></i>
+                    <h2>Match Parameters</h2>
+                </div>
+                <form id="predictor-form" class="predictor-form">
+                    <div class="form-row">
+                        <!-- Team 1 Selection -->
+                        <div class="form-group">
+                            <label for="team1"><i class="fa-solid fa-shield-halved text-primary"></i> Team 1 (Batting First)</label>
+                            <select id="team1" name="team1" required>
+                                <option value="" disabled selected>Select Team 1</option>
+                                {% for team in teams %}
+                                <option value="{{ team }}">{{ team }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- Team 2 Selection -->
+                        <div class="form-group">
+                            <label for="team2"><i class="fa-solid fa-shield-halved text-secondary"></i> Team 2 (Chasing)</label>
+                            <select id="team2" name="team2" required>
+                                <option value="" disabled selected>Select Team 2</option>
+                                {% for team in teams %}
+                                <option value="{{ team }}">{{ team }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Venue Selection -->
+                    <div class="form-group">
+                        <label for="venue"><i class="fa-solid fa-location-dot text-accent"></i> Match Venue</label>
+                        <select id="venue" name="venue" required>
+                            <option value="" disabled selected>Select Venue</option>
+                            {% for venue in venues %}
+                            <option value="{{ venue }}">{{ venue }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Toss Winner Selection -->
+                        <div class="form-group">
+                            <label for="toss_winner"><i class="fa-solid fa-circle-dollar-to-slot text-gold"></i> Toss Winner</label>
+                            <select id="toss_winner" name="toss_winner" required disabled>
+                                <option value="" disabled selected>Select Teams First</option>
+                            </select>
+                        </div>
+                        <!-- Toss Decision Selection -->
+                        <div class="form-group">
+                            <label for="toss_decision"><i class="fa-solid fa-gavel text-cyan"></i> Toss Decision</label>
+                            <select id="toss_decision" name="toss_decision" required>
+                                <option value="" disabled selected>Select Decision</option>
+                                <option value="bat">Bat First</option>
+                                <option value="field">Field First</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary btn-block" id="btn-predict">
+                        <span>Predict Match Winner</span>
+                        <i class="fa-solid fa-calculator btn-icon"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Prediction Results Panel (Initially hidden, revealed on submit) -->
+            <div class="glass-card results-card" id="results-panel">
+                <!-- Initial placeholder -->
+                <div class="results-placeholder" id="results-placeholder">
+                    <i class="fa-solid fa-circle-nodes placeholder-icon"></i>
+                    <h3>Prediction Outcome</h3>
+                    <p>Select the match parameters and click prediction button to generate the probability breakdown.</p>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div class="loading-container hidden" id="results-loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing historical data and running ML model inference...</p>
+                </div>
+
+                <!-- Actual Results Section (Fades in) -->
+                <div class="results-content hidden" id="results-content">
+                    <div class="predicted-winner-banner">
+                        <span class="prediction-label">PREDICTED WINNER</span>
+                        <h3 id="predicted-winner-name">Mumbai Indians</h3>
+                        <div class="confidence-badge">
+                            <i class="fa-solid fa-fire"></i> <span id="predicted-confidence">65.4%</span> Probability
+                        </div>
+                    </div>
+
+                    <!-- Probability Comparison Bar -->
+                    <div class="probability-bars-section">
+                        <h4>Win Probability Breakdown</h4>
+                        <div class="team-prob-labels">
+                            <span class="team-label" id="prob-t1-name">CSK</span>
+                            <span class="team-label" id="prob-t2-name">MI</span>
+                        </div>
+                        <div class="prob-progress-bar">
+                            <div class="progress-segment p-t1" id="prob-t1-bar" style="width: 50%;">
+                                <span class="percent-label" id="prob-t1-label">50%</span>
+                            </div>
+                            <div class="progress-segment p-t2" id="prob-t2-bar" style="width: 50%;">
+                                <span class="percent-label" id="prob-t2-label">50%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Insights Tabular Grid -->
+                    <div class="stats-breakdown-grid">
+                        <!-- Head to Head Stats Card -->
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <i class="fa-solid fa-people-arrows text-cyan"></i>
+                                <h5>Head to Head History</h5>
+                            </div>
+                            <div class="stat-card-body">
+                                <div class="stat-val" id="h2h-total-matches">0</div>
+                                <div class="stat-desc">Matches Played Overall</div>
+                                <div class="h2h-matchup">
+                                    <div class="h2h-team-row">
+                                        <span id="h2h-t1-name">Team 1</span>
+                                        <span class="stat-sub-val" id="h2h-t1-wins">0 Wins</span>
+                                    </div>
+                                    <div class="h2h-team-row">
+                                        <span id="h2h-t2-name">Team 2</span>
+                                        <span class="stat-sub-val" id="h2h-t2-wins">0 Wins</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Venue stats Card -->
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <i class="fa-solid fa-stadium text-primary"></i>
+                                <h5>Venue Success Record</h5>
+                            </div>
+                            <div class="stat-card-body">
+                                <p class="venue-name-sub" id="venue-sub-label">Stadium Name</p>
+                                <div class="venue-stats-breakdown">
+                                    <div class="venue-stat-row">
+                                        <span id="venue-t1-name">Team 1</span>
+                                        <span class="stat-sub-val" id="venue-t1-record">0 / 0 Wins</span>
+                                    </div>
+                                    <div class="venue-stat-row">
+                                        <span id="venue-t2-name">Team 2</span>
+                                        <span class="stat-sub-val" id="venue-t2-record">0 / 0 Wins</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team 1 Win Rate Card -->
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <i class="fa-solid fa-percent text-success"></i>
+                                <h5 id="overall-t1-header">Team 1 Win Rate</h5>
+                            </div>
+                            <div class="stat-card-body">
+                                <div class="stat-val" id="overall-t1-rate">0%</div>
+                                <div class="stat-desc" id="overall-t1-desc">0 Wins of 0 Matches</div>
+                            </div>
+                        </div>
+
+                        <!-- Team 2 Win Rate Card -->
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <i class="fa-solid fa-percent text-success"></i>
+                                <h5 id="overall-t2-header">Team 2 Win Rate</h5>
+                            </div>
+                            <div class="stat-card-body">
+                                <div class="stat-val" id="overall-t2-rate">0%</div>
+                                <div class="stat-desc" id="overall-t2-desc">0 Wins of 0 Matches</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 IPL Predictor Platform. Created using Python, Scikit-learn, and Tableau.</p>
+        </div>
+    </footer>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

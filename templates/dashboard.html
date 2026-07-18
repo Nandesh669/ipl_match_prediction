@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Insights Dashboard - Historical Visualizations</title>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dark-theme">
+    <div class="glow-bg">
+        <div class="glow-circle gc1"></div>
+        <div class="glow-circle gc2"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="main-header">
+        <div class="nav-container">
+            <a href="/" class="brand-logo">
+                <i class="fa-solid fa-trophy brand-icon"></i>
+                <span>IPL<span class="highlight">Predict</span></span>
+            </a>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link {% if active_page == 'predict' %}active{% endif %}">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Predictor
+                </a>
+                <a href="/dashboard" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i> Insights
+                </a>
+                <a href="/model" class="nav-link {% if active_page == 'model' %}active{% endif %}">
+                    <i class="fa-solid fa-robot"></i> Model Report
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="content-container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1 class="hero-title animate-fade-in">IPL Matches Insights</h1>
+            <p class="hero-subtitle animate-fade-in delay-1">Explore historical statistics, team success trends, toss decisions across seasons, and player benchmarks. Data is populated dynamically from processed CSV outputs.</p>
+        </section>
+
+        <!-- Dynamic Visualization Grid -->
+        <div class="dashboard-grid animate-fade-in delay-2">
+            <!-- Chart Card 1: Team Win Ratios -->
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <i class="fa-solid fa-ranking-star icon-primary"></i>
+                    <h3>Overall Team Win Percentages</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="team-wins-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart Card 2: Toss Decision Trends -->
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <i class="fa-solid fa-arrows-spin icon-secondary"></i>
+                    <h3>Toss Decision Trends by Season</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="toss-trends-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart Card 3: Toss Winner vs Match Winner -->
+            <div class="glass-card chart-card small-chart">
+                <div class="chart-header">
+                    <i class="fa-solid fa-percentage icon-success"></i>
+                    <h3>Toss Winner = Match Winner?</h3>
+                </div>
+                <div class="chart-body doughnut-body">
+                    <canvas id="toss-impact-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart Card 4: Player of the Match Awards -->
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <i class="fa-solid fa-medal icon-gold"></i>
+                    <h3>Top 10 Player of the Match Leaders</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="player-awards-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Chart Card 5: Venue Wins Analysis -->
+            <div class="glass-card chart-card large-chart">
+                <div class="chart-header">
+                    <i class="fa-solid fa-building-columns icon-accent"></i>
+                    <h3>Venue Chasing vs Defending Analysis (Top 10 Stadiums)</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="venue-comparison-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tableau reporting section -->
+        <section class="tableau-integration-section animate-fade-in delay-3">
+            <div class="glass-card tableau-card">
+                <div class="tableau-card-content">
+                    <div class="tableau-info">
+                        <span class="badge badge-tableau">BI reporting integration</span>
+                        <h2>Tableau Visualization Datasets Ready</h2>
+                        <p>We have processed and formatted three custom-engineered CSV datasets in the <code>data/processed/</code> directory that are fully optimized for direct import into <strong>Tableau Desktop</strong> or <strong>Tableau Public</strong>:</p>
+                        
+                        <div class="tableau-files-list">
+                            <div class="tableau-file-item">
+                                <i class="fa-solid fa-file-csv csv-icon"></i>
+                                <div>
+                                    <strong>tableau_matches_clean.csv</strong>
+                                    <span>Contains match metadata, cities, dates, teams, toss decisions, winners, margins, and umpires.</span>
+                                </div>
+                            </div>
+                            <div class="tableau-file-item">
+                                <i class="fa-solid fa-file-csv csv-icon"></i>
+                                <div>
+                                    <strong>tableau_team_stats.csv</strong>
+                                    <span>Pre-aggregated records of total matches, toss wins, match wins, and percentage correlations for all 13 teams.</span>
+                                </div>
+                            </div>
+                            <div class="tableau-file-item">
+                                <i class="fa-solid fa-file-csv csv-icon"></i>
+                                <div>
+                                    <strong>tableau_venue_stats.csv</strong>
+                                    <span>Records average matches played, batting first wins, and chasing success ratios for stadium layout reports.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tableau-guide-box">
+                        <h3><i class="fa-solid fa-circle-info"></i> How to view in Tableau:</h3>
+                        <ol>
+                            <li>Launch <strong>Tableau Desktop</strong> / <strong>Public</strong>.</li>
+                            <li>Select <strong>Connect to a File &rarr; Text File</strong>.</li>
+                            <li>Open any of the CSVs in the <code class="dir-code">data/processed/</code> folder.</li>
+                            <li>Create a <strong>Dashboard</strong> mapping:
+                                <ul>
+                                    <li><em>Geographic maps</em> using <code>city</code> and <code>venue</code>.</li>
+                                    <li><em>Lollipop Charts</em> for top-winning teams.</li>
+                                    <li><em>Dual-axis charts</em> for Toss win-loss influence.</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 IPL Predictor Platform. Created using Python, Scikit-learn, and Tableau.</p>
+        </div>
+    </footer>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

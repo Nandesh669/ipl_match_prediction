@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Accessible Page</title>
+  <style>
+    body { font-size: 18px; background: #fff; color: #000; }
+    a:focus, button:focus { outline: 3px solid blue; }
+  </style>
+</head>
+<body>
+  <header><h1>My Accessible Website</h1></header>
+  <nav aria-label="Main Navigation">
+    <a href="#main">Skip to Content</a>
+    <a href="#">Home</a>
+    <a href="#">About</a>
+  </nav>
+  <main id="main">
+    <h2>About Us</h2>
+    <p>This page follows WCAG 2.1 guidelines.</p>
+    <img src="logo.png" alt="Company Logo">
+    <form>
+      <label for="name">Name:</label>
+      <input type="text" id="name" aria-required="true"><br><br>
+      <button type="submit">Submit</button>
+    </form>
+  </main>
+</body>
+</html>

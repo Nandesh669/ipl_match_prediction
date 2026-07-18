@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Model Performance & Evaluation Report</title>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dark-theme">
+    <div class="glow-bg">
+        <div class="glow-circle gc1"></div>
+        <div class="glow-circle gc2"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="main-header">
+        <div class="nav-container">
+            <a href="/" class="brand-logo">
+                <i class="fa-solid fa-trophy brand-icon"></i>
+                <span>IPL<span class="highlight">Predict</span></span>
+            </a>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link {% if active_page == 'predict' %}active{% endif %}">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Predictor
+                </a>
+                <a href="/dashboard" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i> Insights
+                </a>
+                <a href="/model" class="nav-link {% if active_page == 'model' %}active{% endif %}">
+                    <i class="fa-solid fa-robot"></i> Model Report
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="content-container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1 class="hero-title animate-fade-in">Model Performance Analysis</h1>
+            <p class="hero-subtitle animate-fade-in delay-1">Review the accuracy, precision, recall, and ROC-AUC curve scores for our classification models. Inspect feature importances and confusion matrix outputs.</p>
+        </section>
+
+        <!-- Best Model Banner -->
+        <section class="best-model-section animate-fade-in delay-2">
+            <div class="glass-card best-model-card">
+                <div class="best-model-info">
+                    <div class="best-model-badge">
+                        <i class="fa-solid fa-medal"></i> Best Performing Model
+                    </div>
+                    <h2>{{ best_model }}</h2>
+                    <p>This model has been selected for production inference because it scored the highest accuracy on our symmetric train-test split, which is isolated chronologically to avoid look-ahead bias.</p>
+                </div>
+                <div class="best-model-metric">
+                    <div class="metric-score">{{ "%.2f"|format(results[best_model]['accuracy'] * 100) }}%</div>
+                    <div class="metric-label">Validation Accuracy</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Model Comparison Section -->
+        <section class="model-comparison-section animate-fade-in delay-2">
+            <div class="section-title-wrapper">
+                <h2>Classification Models Benchmarking</h2>
+                <p>We trained and evaluated four distinct algorithms on our engineered datasets.</p>
+            </div>
+            
+            <div class="models-grid">
+                {% for name, metrics in results.items() %}
+                <div class="glass-card model-metrics-card {% if name == best_model %}highlighted-border{% endif %}">
+                    <div class="model-card-header">
+                        <h3>{{ name }}</h3>
+                        {% if name == best_model %}
+                        <span class="active-tag">Active</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="metrics-scores-grid">
+                        <div class="score-item">
+                            <span class="score-val">{{ "%.4f"|format(metrics['accuracy']) }}</span>
+                            <span class="score-label">Accuracy</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-val">{{ "%.4f"|format(metrics['roc_auc']) }}</span>
+                            <span class="score-label">ROC-AUC</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-val">{{ "%.4f"|format(metrics['precision']) }}</span>
+                            <span class="score-label">Precision</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-val">{{ "%.4f"|format(metrics['recall']) }}</span>
+                            <span class="score-label">Recall</span>
+                        </div>
+                        <div class="score-item full-width-score">
+                            <span class="score-val">{{ "%.4f"|format(metrics['f1_score']) }}</span>
+                            <span class="score-label">F1-Score</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Detailed Model Diagnostics Grid -->
+        <div class="diagnostics-grid animate-fade-in delay-3">
+            <!-- Feature Importance Chart -->
+            <div class="glass-card diagnostic-card">
+                <div class="chart-header">
+                    <i class="fa-solid fa-gauge-high icon-primary"></i>
+                    <h3>Feature Importances (Best Model)</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="features-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Confusion Matrix Display -->
+            <div class="glass-card diagnostic-card">
+                <div class="chart-header">
+                    <i class="fa-solid fa-table-cells icon-secondary"></i>
+                    <h3>Confusion Matrix (Best Model)</h3>
+                </div>
+                <div class="matrix-body">
+                    <p class="matrix-desc">Shows the counts of true positives, true negatives, false positives, and false negatives on our test set.</p>
+                    
+                    <div class="matrix-table-container">
+                        <table class="confusion-matrix-table">
+                            <thead>
+                                <tr>
+                                    <th colspan="2" rowspan="2" class="diagonal-label">
+                                        <div class="pred-vs-act">
+                                            <span class="act-text">Actual</span>
+                                            <span class="pred-text">Predicted</span>
+                                        </div>
+                                    </th>
+                                    <th colspan="2" class="header-predicted">Predicted Match Winner</th>
+                                </tr>
+                                <tr>
+                                    <th>Predict Team 2 Win (0)</th>
+                                    <th>Predict Team 1 Win (1)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th rowspan="2" class="header-actual">Actual Match Winner</th>
+                                    <th>Actual Team 2 Win (0)</th>
+                                    <!-- TN -->
+                                    <td class="cell-matrix tn">
+                                        <div class="cell-val">{{ results[best_model]['confusion_matrix'][0][0] }}</div>
+                                        <div class="cell-label">True Negative</div>
+                                    </td>
+                                    <!-- FP -->
+                                    <td class="cell-matrix fp">
+                                        <div class="cell-val">{{ results[best_model]['confusion_matrix'][0][1] }}</div>
+                                        <div class="cell-label">False Positive</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Actual Team 1 Win (1)</th>
+                                    <!-- FN -->
+                                    <td class="cell-matrix fn">
+                                        <div class="cell-val">{{ results[best_model]['confusion_matrix'][1][0] }}</div>
+                                        <div class="cell-label">False Negative</div>
+                                    </td>
+                                    <!-- TP -->
+                                    <td class="cell-matrix tp">
+                                        <div class="cell-val">{{ results[best_model]['confusion_matrix'][1][1] }}</div>
+                                        <div class="cell-label">True Positive</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="matrix-insights">
+                        <p><i class="fa-solid fa-lightbulb text-gold"></i> <strong>Diagnostic Insight:</strong></p>
+                        <ul>
+                            <li>The model successfully predicted <strong>{{ results[best_model]['confusion_matrix'][0][0] + results[best_model]['confusion_matrix'][1][1] }}</strong> matches correctly out of <strong>{{ results[best_model]['confusion_matrix'][0][0] + results[best_model]['confusion_matrix'][0][1] + results[best_model]['confusion_matrix'][1][0] + results[best_model]['confusion_matrix'][1][1] }}</strong> test matches.</li>
+                            <li>The symmetric testing process ensures the false positive rate (FPR) and false negative rate (FNR) are perfectly balanced, making the model unbiased towards any order permutation of teams.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 IPL Predictor Platform. Created using Python, Scikit-learn, and Tableau.</p>
+        </div>
+    </footer>
+
+    <!-- Pass feature importances to JS for rendering -->
+    <script>
+        const featureImportances = {{ importances | tojson }};
+        const featureLabelsMapping = {
+            't1_win_ratio': 'Team 1 Win Ratio',
+            't2_win_ratio': 'Team 2 Win Ratio',
+            'h2h_win_ratio': 'Head-to-Head Win Ratio',
+            't1_venue_win_ratio': 'Team 1 Venue Win Ratio',
+            't2_venue_win_ratio': 'Team 2 Venue Win Ratio',
+            'toss_winner_is_t1': 'Toss Winner is Team 1',
+            'toss_decision_enc': 'Toss Decision (Bat)'
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/model_info.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>JS Events</title></head>
+<body>
+  <h2>JavaScript Events Demo</h2>
+  <div id="box" style="width:200px;height:100px;background:lightblue;">
+ Hover over me
+  </div>
+  <input type="text" id="keyInput" placeholder="Type here">
+  <p id="keyDisplay"></p>
+  <form id="myForm">
+    <input type="text" id="fname" placeholder="Enter name" required>
+    <button type="submit">Submit</button>
+  </form>     <p id="msg"></p>
+  <script>    // Mouse events
+    const box = document.getElementById("box");
+    box.addEventListener("mouseover", () => box.style.background = "orange");
+    box.addEventListener("mouseout",  () => box.style.background = "lightblue");
+    // Keyboard event
+    document.getElementById("keyInput").addEventListener("keyup", (e) => {
+      document.getElementById("keyDisplay").innerText = "Key pressed: " + e.key;
+    });    // Submit event
+    document.getElementById("myForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("fname").value;
+      document.getElementById("msg").innerText = "Hello, " + name + "!";    });
+  </script>
+</body>
+</html>
